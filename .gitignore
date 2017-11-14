@@ -1,0 +1,6 @@
+*.pyc
+*.csv
+*credentials.json
+ckan_settings.json
+scratch/
+credentials*
