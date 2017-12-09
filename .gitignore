@@ -1,5 +1,6 @@
 *.pyc
 *.csv
+*.swp
 *credentials.json
 ckan_settings.json
 scratch/
