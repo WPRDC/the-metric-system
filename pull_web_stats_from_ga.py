@@ -4,7 +4,7 @@ import argparse
 
 from apiclient.discovery import build
 from oauth2client.service_account import ServiceAccountCredentials
-from credentials_file import SERVICE_ACCOUNT_E_MAIL# to set the SERVICE_ACCOUNT_E_MAIL constant
+from credentials_file import SERVICE_ACCOUNT_E_MAIL, API_key # to set the SERVICE_ACCOUNT_E_MAIL constant and API key (temporarily)
 import httplib2
 from oauth2client import client
 from oauth2client import file
@@ -17,6 +17,8 @@ import requests
 import json
 import time
 from datapusher import Datapusher
+
+import ckanapi
 
 import pandas as pd
 
@@ -52,6 +54,7 @@ def upsert_data(dp,resource_id,data):
     else:
         print("Data successfully stored.")
     print("Status code: %d" % r.status_code)
+    return r.status_code == 200
 
 def get_service(api_name, api_version, scope, key_file_location,
                 service_account_email):
@@ -265,7 +268,52 @@ def stats_to_dict(stats,columns):
         tuples.append((col_name, stats[k]))
     return OrderedDict(tuples)
 
+def query_resource(site,query,API_key=None):
+    # Use the datastore_search_sql API endpoint to query a CKAN resource.
+    ckan = ckanapi.RemoteCKAN(site, apikey=API_key)
+    response = ckan.action.datastore_search_sql(sql=query)
+    # A typical response is a dictionary like this
+    #{u'fields': [{u'id': u'_id', u'type': u'int4'},
+    #             {u'id': u'_full_text', u'type': u'tsvector'},
+    #             {u'id': u'pin', u'type': u'text'},
+    #             {u'id': u'number', u'type': u'int4'},
+    #             {u'id': u'total_amount', u'type': u'float8'}],
+    # u'records': [{u'_full_text': u"'0001b00010000000':1 '11':2 '13585.47':3",
+    #               u'_id': 1,
+    #               u'number': 11,
+    #               u'pin': u'0001B00010000000',
+    #               u'total_amount': 13585.47},
+    #              {u'_full_text': u"'0001c00058000000':3 '2':2 '7827.64':1",
+    #               u'_id': 2,
+    #               u'number': 2,
+    #               u'pin': u'0001C00058000000',
+    #               u'total_amount': 7827.64},
+    #              {u'_full_text': u"'0001c01661006700':3 '1':1 '3233.59':2",
+    #               u'_id': 3,
+    #               u'number': 1,
+    #               u'pin': u'0001C01661006700',
+    #               u'total_amount': 3233.59}]
+    # u'sql': u'SELECT * FROM "d1e80180-5b2e-4dab-8ec3-be621628649e" LIMIT 3'}
+    data = response['records']
+    return data
+
+def load_resource(site,resource_id,API_key):
+    data = query_resource(site, 'SELECT * FROM "{}"'.format(resource_id), API_key)
+    return data
+
+def stringify_groups(p):
+    groups_string = ''
+    if 'groups' in p:
+        groups = p['groups']
+        groups_string = '|'.join(set([g['title'] for g in groups]))
+    return groups_string
+
 def get_IDs():
+    # This function originally just got resource IDs (and other parameters) from the
+    # current_package_list_with_resources API endpoint. However, this ignores 
+    # resources that existed but have been deleted (or turned private again). To
+    # track the statistics of these as well. We are now merging in historical 
+    # resource IDs produced by dataset-tracker.
     resources, packages, = [], []
     lookup_by_id = defaultdict(lambda: defaultdict(str))
     url = "https://data.wprdc.org/api/3/action/current_package_list_with_resources?limit=99999"
@@ -276,10 +324,6 @@ def get_IDs():
         r_list = p['resources']
         if len(r_list) > 0:
             packages.append(r_list[0]['package_id'])
-            groups_string = ''
-            if 'groups' in p:
-                groups = p['groups']
-                groups_string = '|'.join(set([g['title'] for g in groups]))
             for k,resource in enumerate(r_list):
                 if 'id' in resource:
                     #print k,resource['id']
@@ -287,7 +331,7 @@ def get_IDs():
                     lookup_by_id[resource['id']]['package id'] = r_list[0]['package_id']
                     lookup_by_id[resource['id']]['package name'] = p['title']
                     lookup_by_id[resource['id']]['publisher'] = p['organization']['title']
-                    lookup_by_id[resource['id']]['groups'] = groups_string
+                    lookup_by_id[resource['id']]['groups'] = stringify_groups(p)
                 if 'name' in resource:
                     lookup_by_id[resource['id']]['name'] = resource['name']
 #                else:
@@ -295,6 +339,26 @@ def get_IDs():
 
                 #else:
                 #    print k, "No resource id here"
+
+    tracks = load_resource("https://data.wprdc.org","272071c7-353a-43f6-9007-96a944c8dab1",None)
+    for r in tracks:
+        r_id = r['resource_id']
+        if r_id not in resources:
+            if 'name' in resource:
+                lookup_by_id[resource['id']]['name'] = resource['name']
+                print("Adding resource ID {} ({})".format(r_id,r['resource_name']))
+            else:
+                print("Adding resource ID {} (Unnamed resource)".format(r_id))
+            resources.append(r_id)
+            if r['package_id'] not in packages:
+                packages.append(r['package_id'])
+            lookup_by_id[r_id]['package_id'] = r['package_id']
+            lookup_by_id[r_id]['package name'] = r['package_name']
+            lookup_by_id[r_id]['publisher'] = r['organization']
+            lookup_by_id[r_id]['groups'] = stringify_groups(p)
+
+
+
     return resources, packages, lookup_by_id
 
 def insert_zeros(rows,extra_columns,metrics_count,yearmonth = '201510'):
@@ -347,6 +411,29 @@ def group_by_1_sum_2_ax_3(all_rows,common_fields,fields_to_sum,eliminate,metrics
             grouped.drop(e, axis=1, inplace=True)
     return grouped
 
+def set_package_parameters_to_values(site,package_id,parameters,new_values,API_key):
+    # This function was stolen from utility-belt.
+    success = False
+    try:
+        ckan = ckanapi.RemoteCKAN(site, apikey=API_key)
+        original_values = [get_package_parameter(site,package_id,p,API_key) for p in parameters]
+        payload = {}
+        payload['id'] = package_id
+        for parameter,new_value in zip(parameters,new_values):
+            payload[parameter] = new_value
+        results = ckan.action.package_patch(**payload)
+        print(results)
+        print("Changed the parameters {} from {} to {} on package {}".format(parameters, original_values, new_values, package_id))
+        success = True
+    except:
+        success = False
+        exc_type, exc_value, exc_traceback = sys.exc_info()
+        print("Error: {}".format(exc_type))
+        lines = traceback.format_exception(exc_type, exc_value, exc_traceback)
+        print(''.join('!!! ' + line for line in lines))
+
+    return success
+
 def push_dataset_to_ckan(stats_rows, metrics_name, server, resource_id, field_mapper, keys, fields_to_add=[]):
     with open('ckan_settings.json') as f:
         settings = json.load(f)
@@ -365,7 +452,8 @@ def push_dataset_to_ckan(stats_rows, metrics_name, server, resource_id, field_ma
     results_dicts = [stats_to_dict(r,fields_list) for r in stats_rows]
     if len(results_dicts) > 0:
         pprint.pprint(results_dicts[-1])
-    return upsert_data(dp,resource_id,results_dicts)
+    success = upsert_data(dp,resource_id,results_dicts)
+    return success
 
 def push_df_to_ckan(df, server, resource_id, field_mapper, all_fields, keys):
     with open('ckan_settings.json') as f:
@@ -386,7 +474,8 @@ def push_df_to_ckan(df, server, resource_id, field_mapper, all_fields, keys):
     for d in list_of_dicts:
         results_dicts.append(OrderedDict((f,d[f]) for f in all_fields))
     pprint.pprint(results_dicts[-1])
-    return upsert_data(dp,resource_id,results_dicts)
+    success = upsert_data(dp,resource_id,results_dicts)
+    return success
 
 def initialize_ga_api():
     # Define the auth scopes to request.
