@@ -411,19 +411,25 @@ def group_by_1_sum_2_ax_3(all_rows,common_fields,fields_to_sum,eliminate,metrics
             grouped.drop(e, axis=1, inplace=True)
     return grouped
 
-def set_package_parameters_to_values(site,package_id,parameters,new_values,API_key):
-    # This function was stolen from utility-belt.
+def set_resource_parameters_to_values(site,resource_id,parameters,new_values,API_key):
+    """Sets the given resource parameters to the given values for the specified
+    resource.
+
+    This fails if the parameter does not currently exist. (In this case, use
+    create_resource_parameter()."""
     success = False
     try:
         ckan = ckanapi.RemoteCKAN(site, apikey=API_key)
-        original_values = [get_package_parameter(site,package_id,p,API_key) for p in parameters]
+        original_values = [get_resource_parameter(site,resource_id,p,API_key) for p in parameters]
         payload = {}
-        payload['id'] = package_id
+        payload['id'] = resource_id
         for parameter,new_value in zip(parameters,new_values):
             payload[parameter] = new_value
-        results = ckan.action.package_patch(**payload)
+        #For example,
+        #   results = ckan.action.resource_patch(id=resource_id, url='#', url_type='')
+        results = ckan.action.resource_patch(**payload)
         print(results)
-        print("Changed the parameters {} from {} to {} on package {}".format(parameters, original_values, new_values, package_id))
+        print("Changed the parameters {} from {} to {} on resource {}".format(parameters, original_values, new_values, resource_id))
         success = True
     except:
         success = False
@@ -433,6 +439,10 @@ def set_package_parameters_to_values(site,package_id,parameters,new_values,API_k
         print(''.join('!!! ' + line for line in lines))
 
     return success
+
+def update_resource_timestamp(resource_id,field):
+    site = "https://data.wprdc.org"
+    return set_resource_parameters_to_values(site,package_id,[field],[datetime.now()],API_key)
 
 def push_dataset_to_ckan(stats_rows, metrics_name, server, resource_id, field_mapper, keys, fields_to_add=[]):
     with open('ckan_settings.json') as f:
@@ -453,6 +463,9 @@ def push_dataset_to_ckan(stats_rows, metrics_name, server, resource_id, field_ma
     if len(results_dicts) > 0:
         pprint.pprint(results_dicts[-1])
     success = upsert_data(dp,resource_id,results_dicts)
+    if success:
+        success2 = update_resource_timestamp(resource_id,'last_modified')
+        return success2
     return success
 
 def push_df_to_ckan(df, server, resource_id, field_mapper, all_fields, keys):
@@ -475,6 +488,9 @@ def push_df_to_ckan(df, server, resource_id, field_mapper, all_fields, keys):
         results_dicts.append(OrderedDict((f,d[f]) for f in all_fields))
     pprint.pprint(results_dicts[-1])
     success = upsert_data(dp,resource_id,results_dicts)
+    if success:
+        success2 = update_resource_timestamp(resource_id,'last_modified')
+        return success2
     return success
 
 def initialize_ga_api():
