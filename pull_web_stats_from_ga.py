@@ -33,29 +33,20 @@ sys.excepthook = sys.__excepthook__ # a) the script would get stuck after
 # runs, I'm wondering whether Google Analytics is rate-limiting this a
 # little, so I've decreased the frequency from 2 Hz to 1 Hz.
 
-def upsert_data(dp,resource_id,data):
-    # Upsert data to the CKAN datastore (as configured in dp) and the
-    # given resource ID.
+# BEGIN functions for accessing Google Analytics #
+def initialize_ga_api():
+    # Define the auth scopes to request.
+    scope = ['https://www.googleapis.com/auth/analytics.readonly']
 
-    # The format of the data variable is a list of dicts, where each
-    # dict represents a row of the array, with the column name being
-    # the key and the column value being the value.
+    # Use the developer console and replace the values with your
+    # service account email and relative location of your key file.
+    service_account_email = SERVICE_ACCOUNT_E_MAIL #'<Replace with your service account email address.>'
+    key_file_location = 'Google-service-account-credentials.json' #'<Replace with /path/to/generated/client_secrets.p12>'
 
-    # The types of the columns are defined when the datastore is
-    # created/recreated, in a command like this:
-    # dp.create_datastore(resource_id, reordered_fields, keys)
-
-    # which returns a result like this:
-    # {u'fields': [{u'type': u'text', u'id': u'Year+month'}, {u'type': u'text', u'id': u'Package'}, {u'type': u'text', u'id': u'Resource'}, {u'type': u'text', u'id': u'Publisher'}, {u'type': u'text', u'id': u'Groups'}, {u'type': u'text', u'id': u'Package ID'}, {u'type': u'text', u'id': u'Resource ID'}, {u'type': u'int', u'id': u'Pageviews'}], u'method': u'insert', u'primary_key': [u'Year+month', u'Resource ID'], u'resource_id': u'3d6b60f4-f25a-4e93-94d9-730eed61f69c'}
-    #fields_list =
-    #OrderedDict([('Year+month', u'201612'), ('Package', u'Allegheny County Air Quality'), ('Resource', u'Hourly Air Quality Data'), ('Publisher', u'Allegheny County'), ('Groups', u'Environment'), ('Package ID', u'c7b3266c-adc6-41c0-b19a-8d4353bfcdaf'), ('Resource ID', u'15d7dbf6-cb3b-407b-ae01-325352deed5c'), ('Pageviews', u'0')])
-    r = dp.upsert(resource_id, data, method='upsert')
-    if r.status_code != 200:
-        print(r.text)
-    else:
-        print("Data successfully stored.")
-    print("Status code: {}".format(r.status_code))
-    return r.status_code == 200
+    # Authenticate and construct service.
+    service = get_service('analytics', 'v3', scope, key_file_location,
+    service_account_email)
+    return service
 
 def get_service(api_name, api_version, scope, key_file_location,
                 service_account_email):
@@ -231,6 +222,7 @@ def get_history_by_month(service,profile,metrics,resource_id=None,event=False):
                 requests['rows'] = [r[:xi]+r[xi+1:] for r in requests['rows'] if 'CKAN API Request' not in r]
 
     return requests
+# END functions for accessing Google Analytics #
 
 def print_results(results, metrics = None):
   # Print data nicely for the user.
@@ -268,6 +260,30 @@ def stats_to_dict(stats,columns):
     for k,col_name in enumerate(columns):
         tuples.append((col_name, stats[k]))
     return OrderedDict(tuples)
+
+def upsert_data(dp,resource_id,data):
+    # Upsert data to the CKAN datastore (as configured in dp) and the
+    # given resource ID.
+
+    # The format of the data variable is a list of dicts, where each
+    # dict represents a row of the array, with the column name being
+    # the key and the column value being the value.
+
+    # The types of the columns are defined when the datastore is
+    # created/recreated, in a command like this:
+    # dp.create_datastore(resource_id, reordered_fields, keys)
+
+    # which returns a result like this:
+    # {u'fields': [{u'type': u'text', u'id': u'Year+month'}, {u'type': u'text', u'id': u'Package'}, {u'type': u'text', u'id': u'Resource'}, {u'type': u'text', u'id': u'Publisher'}, {u'type': u'text', u'id': u'Groups'}, {u'type': u'text', u'id': u'Package ID'}, {u'type': u'text', u'id': u'Resource ID'}, {u'type': u'int', u'id': u'Pageviews'}], u'method': u'insert', u'primary_key': [u'Year+month', u'Resource ID'], u'resource_id': u'3d6b60f4-f25a-4e93-94d9-730eed61f69c'}
+    #fields_list =
+    #OrderedDict([('Year+month', u'201612'), ('Package', u'Allegheny County Air Quality'), ('Resource', u'Hourly Air Quality Data'), ('Publisher', u'Allegheny County'), ('Groups', u'Environment'), ('Package ID', u'c7b3266c-adc6-41c0-b19a-8d4353bfcdaf'), ('Resource ID', u'15d7dbf6-cb3b-407b-ae01-325352deed5c'), ('Pageviews', u'0')])
+    r = dp.upsert(resource_id, data, method='upsert')
+    if r.status_code != 200:
+        print(r.text)
+    else:
+        print("Data successfully stored.")
+    print("Status code: {}".format(r.status_code))
+    return r.status_code == 200
 
 def query_resource(site,query,API_key=None):
     # Use the datastore_search_sql API endpoint to query a CKAN resource.
@@ -509,20 +525,6 @@ def push_df_to_ckan(df, server, resource_id, field_mapper, all_fields, keys):
         success2 = update_resource_timestamp(resource_id,'last_modified')
         return success2
     return success
-
-def initialize_ga_api():
-    # Define the auth scopes to request.
-    scope = ['https://www.googleapis.com/auth/analytics.readonly']
-
-    # Use the developer console and replace the values with your
-    # service account email and relative location of your key file.
-    service_account_email = SERVICE_ACCOUNT_E_MAIL #'<Replace with your service account email address.>'
-    key_file_location = 'Google-service-account-credentials.json' #'<Replace with /path/to/generated/client_secrets.p12>'
-
-    # Authenticate and construct service.
-    service = get_service('analytics', 'v3', scope, key_file_location,
-    service_account_email)
-    return service
 
 def main():
     service = initialize_ga_api()
