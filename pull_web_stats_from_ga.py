@@ -678,16 +678,4 @@ def main():
     # stuff inserted into the dataset (once the types have been properly taken care of)
 
 if __name__ == '__main__':
-  main()
-
-field_mapper = defaultdict(lambda: "int")
-field_mapper['Year+month'] = "text"
-field_mapper['Package'] = "text"
-field_mapper['Resource'] = "text"
-field_mapper['Publisher'] = "text"
-field_mapper['Groups'] = "text"
-field_mapper['Package ID'] = "text"
-field_mapper['Resource ID'] = "text"
-field_mapper['Users'] = "int"
-field_mapper['Pageviews'] = "int"
-field_mapper['Sessions'] = "int"
+    main()

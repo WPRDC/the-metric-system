@@ -159,4 +159,4 @@ def main():
     fetch_and_store_metric(metric,metrics_name,target_resource_id,store,event,first_yearmonth)
 
 if __name__ == '__main__':
-  main()
+    main()

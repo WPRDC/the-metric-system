@@ -34,4 +34,4 @@ def main():
     fetch_and_store_metric(metric,metrics_name,resource_id,store,event,first_yearmonth,limit)
 
 if __name__ == '__main__':
-  main()
+    main()
