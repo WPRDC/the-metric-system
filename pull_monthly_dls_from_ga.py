@@ -22,6 +22,11 @@ def main():
     from credentials_file import profile # The GA profile ID for data.wrpdc.org
     from credentials_file import monthly_downloads_resource_id # The relevant CKAN resource ID
     store = True
+
+    #store = False
+    if not store:
+        print("NOT sending this data to the CKAN instance.")
+
     metric = 'downloads'
     first_yearmonth = '201603'
     resource_id = monthly_downloads_resource_id

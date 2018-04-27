@@ -29,6 +29,11 @@ def main():
     service = initialize_ga_api()
 
     modify_datastore = True
+    
+    #modify_datastore = False
+    if not modify_datastore:
+        print("NOT modifying the datastore.")
+
     server = "Live" #server = "Staging"
 
     metrics_name = OrderedDict([("ga:totalEvents",'Downloads'),
