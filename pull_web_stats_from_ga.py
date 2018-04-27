@@ -20,7 +20,7 @@ import time
 from datapusher import Datapusher
 
 import ckanapi
-
+import traceback
 import pandas as pd
 
 import sys # These two lines are here to prevent a weird problem wherein
