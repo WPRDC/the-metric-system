@@ -4,8 +4,8 @@ import argparse
 
 from apiclient.discovery import build
 from oauth2client.service_account import ServiceAccountCredentials
-from credentials_file import SERVICE_ACCOUNT_E_MAIL, API_key # to set the SERVICE_ACCOUNT_E_MAIL constant and API key (temporarily)
-from credentials_file import site, tracking_resource_id 
+from credentials_file import SERVICE_ACCOUNT_E_MAIL, profile, API_key # to set the SERVICE_ACCOUNT_E_MAIL constant, GA profile ID, and API key (temporarily)
+from credentials_file import site, tracking_resource_id, site_stats_resource_id
 import httplib2
 from oauth2client import client
 from oauth2client import file
@@ -506,7 +506,6 @@ def initialize_ga_api():
 
 def main():
     service = initialize_ga_api()
-    profile = "101792759" # The profile ID for data.wrpdc.org.
 
     metrics_name = OrderedDict([("ga:users",'Users'),
                     ("ga:sessions",'Sessions'),
@@ -548,8 +547,6 @@ def main():
 
 
         if modify_datastore:
-            site_stats_resource_id = "865441c9-498a-4a3f-8f52-3a865c1c421a"
-
             field_mapper = defaultdict(lambda: "float")
             field_mapper['Year+month'] = "text"
             field_mapper['Users'] = "int"
