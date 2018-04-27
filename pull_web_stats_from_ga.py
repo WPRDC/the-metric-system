@@ -5,6 +5,7 @@ import argparse
 from apiclient.discovery import build
 from oauth2client.service_account import ServiceAccountCredentials
 from credentials_file import SERVICE_ACCOUNT_E_MAIL, API_key # to set the SERVICE_ACCOUNT_E_MAIL constant and API key (temporarily)
+from credentials_file import site, tracking_resource_id 
 import httplib2
 from oauth2client import client
 from oauth2client import file
@@ -316,7 +317,7 @@ def get_IDs():
     # resource IDs produced by dataset-tracker.
     resources, packages, = [], []
     lookup_by_id = defaultdict(lambda: defaultdict(str))
-    url = "https://data.wprdc.org/api/3/action/current_package_list_with_resources?limit=99999"
+    url = "{}/api/3/action/current_package_list_with_resources?limit=99999".format(site)
     r = requests.get(url)
     # Traverse package list to get resource IDs.
     package_list = r.json()['result']
@@ -336,7 +337,8 @@ def get_IDs():
 #                else:
 #                    lookup_by_id[resource['id']]['name'] = 'Unnamed resource'
 
-    tracks = load_resource("https://data.wprdc.org","272071c7-353a-43f6-9007-96a944c8dab1",None)
+
+    tracks = load_resource(site,tracking_resource_id,None)
     for r in tracks:
         r_id = r['resource_id']
         if r_id not in resources:
@@ -437,7 +439,6 @@ def set_resource_parameters_to_values(site,resource_id,parameters,new_values,API
     return success
 
 def update_resource_timestamp(resource_id,field):
-    site = "https://data.wprdc.org"
     return set_resource_parameters_to_values(site,package_id,[field],[datetime.now()],API_key)
 
 def push_dataset_to_ckan(stats_rows, metrics_name, server, resource_id, field_mapper, keys, fields_to_add=[]):

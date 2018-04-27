@@ -19,11 +19,12 @@ sys.excepthook = sys.__excepthook__ # a) the script would get stuck after
     # One issue in trying to merge downloads and pageviews datasets is that there are a lot more resources that come up with non-zero pageviews than resources that come up with non-zero downloads (like 799 vs. like maybe 400-450).
 
 def main():
-    from credentials_file import profile # The profile ID for data.wrpdc.org.
+    from credentials_file import profile # The GA profile ID for data.wrpdc.org
+    from credentials_file import monthly_downloads_resource_id # The relevant CKAN resource ID
     store = True
     metric = 'downloads'
     first_yearmonth = '201603'
-    resource_id = 'e8889e36-e4b1-4343-bb51-fb687eb9a2ff'
+    resource_id = monthly_downloads_resource_id
     event = True
     #store = False
     metrics_name = OrderedDict([("ga:totalEvents",'Downloads'),
@@ -33,7 +34,7 @@ def main():
     limit = 0
     if limit > 0:
         store = False
-    all_rows, fields  = fetch_and_store_metric(metric,metrics_name,resource_id,store,event, first_yearmonth,limit)
+    all_rows, fields = fetch_and_store_metric(metric,metrics_name,resource_id,store,event, first_yearmonth,limit)
     # Aggregate rows by package to get package stats.
 
     common_fields = ['Year+month','Package','Publisher','Groups','Package ID']

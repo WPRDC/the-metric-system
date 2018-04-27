@@ -25,7 +25,7 @@ sys.excepthook = sys.__excepthook__ # a) the script would get stuck after
     # For every resource_id in the data.json file, run downloads_by_month and upsert the results to the monthly-downloads datastore.
 
 def main():
-    from credentials_file import profile # The profile ID for data.wrpdc.org.
+    from credentials_file import profile, monthly_downloads_resource_id # The profile ID for data.wrpdc.org.
     service = initialize_ga_api()
 
     modify_datastore = True
@@ -77,7 +77,7 @@ def main():
 
 # Create an update to the dataset-downloads dataset by just looking at this month and last month and upserting the results.
     if modify_datastore:
-        resource_id = "e8889e36-e4b1-4343-bb51-fb687eb9a2ff"
+        resource_id = monthly_downloads_resource_id
 
         keys = ['Year+month', 'Resource ID']
         push_dataset_to_ckan(all_rows, metrics_name, server, resource_id, field_mapper, keys, keys) #This pushes everything in download_rows
