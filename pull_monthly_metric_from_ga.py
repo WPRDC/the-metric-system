@@ -16,7 +16,7 @@ sys.excepthook = sys.__excepthook__ # a) the script would get stuck after
     # For every resource ID in the data.json file, run metric_by_month and upsert the results to the monthly-downloads datastore.
 
 def fetch_and_store_metric(metric,metrics_name,target_resource_id,modify_datastore,event,first_yearmonth,limit=0):
-    # target_resource_id is the the resource ID of the dataset that the
+    # target_resource_id is the resource ID of the dataset that the
     # fetched information should be sent to (not to be confused with
     # the resource IDs of the data files about which metrics are being
     # obtained).
