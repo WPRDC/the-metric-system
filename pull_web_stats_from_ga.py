@@ -409,6 +409,26 @@ def group_by_1_sum_2_ax_3(all_rows,common_fields,fields_to_sum,eliminate,metrics
             grouped.drop(e, axis=1, inplace=True)
     return grouped
 
+def get_resource_parameter(site,resource_id,parameter=None,API_key=None):
+    # Some resource parameters you can fetch with this function are
+    # 'cache_last_updated', 'package_id', 'webstore_last_updated',
+    # 'datastore_active', 'id', 'size', 'state', 'hash',
+    # 'description', 'format', 'last_modified', 'url_type',
+    # 'mimetype', 'cache_url', 'name', 'created', 'url',
+    # 'webstore_url', 'mimetype_inner', 'position',
+    # 'revision_id', 'resource_type'
+    # Note that 'size' does not seem to be defined for tabular
+    # data on WPRDC.org. (It's not the number of rows in the resource.)
+    try:
+        ckan = ckanapi.RemoteCKAN(site, apikey=API_key)
+        metadata = ckan.action.resource_show(id=resource_id)
+        if parameter is None:
+            return metadata
+        else:
+            return metadata[parameter]
+    except:
+        raise RuntimeError("Unable to obtain resource parameter '{}' for resource with ID {}".format(parameter,resource_id))
+
 def set_resource_parameters_to_values(site,resource_id,parameters,new_values,API_key):
     """Sets the given resource parameters to the given values for the specified
     resource.
@@ -439,7 +459,7 @@ def set_resource_parameters_to_values(site,resource_id,parameters,new_values,API
     return success
 
 def update_resource_timestamp(resource_id,field):
-    return set_resource_parameters_to_values(site,package_id,[field],[datetime.now()],API_key)
+    return set_resource_parameters_to_values(site,resource_id,[field],[datetime.now().isoformat()],API_key)
 
 def push_dataset_to_ckan(stats_rows, metrics_name, server, resource_id, field_mapper, keys, fields_to_add=[]):
     with open('ckan_settings.json') as f:
