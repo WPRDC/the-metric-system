@@ -5,7 +5,7 @@ import argparse
 from apiclient.discovery import build
 from oauth2client.service_account import ServiceAccountCredentials
 from credentials_file import SERVICE_ACCOUNT_E_MAIL, profile, API_key # to set the SERVICE_ACCOUNT_E_MAIL constant, GA profile ID, and API key (temporarily)
-from credentials_file import site, tracking_resource_id, site_stats_resource_id
+from credentials_file import site, tracking_resource_id, site_stats_resource_id, monthly_downloads_resource_id
 import httplib2
 from oauth2client import client
 from oauth2client import file
@@ -628,7 +628,7 @@ def main():
 
     # Create an update to the dataset-downloads dataset by just looking at this month and last month and upserting the results.
         if modify_datastore:
-            resource_id = "e8889e36-e4b1-4343-bb51-fb687eb9a2ff"
+            resource_id = monthly_downloads_resource_id
 
             field_mapper = defaultdict(lambda: "int")
             field_mapper['Year+month'] = "text"

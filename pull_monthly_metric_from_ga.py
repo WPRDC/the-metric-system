@@ -10,8 +10,7 @@ sys.excepthook = sys.__excepthook__ # a) the script would get stuck after
 # and b) would just hang, rather than raising an exception (as designed).
 #http://stackoverflow.com/questions/12865637/why-doesnt-python-exit-from-a-raised-exception-when-executed-with-an-absolute-p
 
-from credentials_file import profile # The Google Analytics profile ID for data.wrpdc.org.
-
+from credentials import monthly_downloads_resource_id
 ####### Get monthly downloads data ####################################
     # Create entire dataset-downloads dataset by looking at every month.
     # For every resource ID in the data.json file, run metric_by_month and upsert the results to the monthly-downloads datastore.
@@ -22,7 +21,7 @@ def fetch_and_store_metric(metric,metrics_name,target_resource_id,modify_datasto
     # the resource IDs of the data files about which metrics are being
     # obtained).
     service = initialize_ga_api()
-    from credentials_file import profile # The profile ID for data.wrpdc.org.
+    from credentials_file import profile # The Google Analytics profile ID for data.wrpdc.org.
 
     server = "Live" #server = "Staging"
 
@@ -143,7 +142,7 @@ def main():
     metric = 'pageviews'
     first_yearmonth = '201510'
     if metric == 'downloads':
-        target_resource_id = "e8889e36-e4b1-4343-bb51-fb687eb9a2ff"
+        target_resource_id = monthly_downloads_resource_id
         first_yearmonth = '201603'
     elif metric == 'pageviews':
         target_resource_id = None
