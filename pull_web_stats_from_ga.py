@@ -53,7 +53,7 @@ def upsert_data(dp,resource_id,data):
         print(r.text)
     else:
         print("Data successfully stored.")
-    print("Status code: %d" % r.status_code)
+    print("Status code: {}".format(r.status_code))
     return r.status_code == 200
 
 def get_service(api_name, api_version, scope, key_file_location,
@@ -234,14 +234,14 @@ def get_history_by_month(service,profile,metrics,resource_id=None,event=False):
 def print_results(results, metrics = None):
   # Print data nicely for the user.
   if results:
-    print 'View (Profile): %s' % results.get('profileInfo').get('profileName')
+    print('View (Profile): {}'.format(results.get('profileInfo').get('profileName')))
     if metrics is None:
-        print 'Total Sessions: %s' % results.get('rows')[0][0]
+        print('Total Sessions: {}'.format(results.get('rows')[0][0]))
     else:
-        print metrics + ': %s' % results.get('rows')[0]
+        print('{} : {}'.format(metrics, results.get('rows')[0]))
 
   else:
-    print 'No results found'
+    print('No results found')
 
 def convert_results_into_dict(results,metrics_name):
     # (This function is for taking Google Analytics result and reformatting them.)
@@ -326,7 +326,6 @@ def get_IDs():
             packages.append(r_list[0]['package_id'])
             for k,resource in enumerate(r_list):
                 if 'id' in resource:
-                    #print k,resource['id']
                     resources.append(resource['id'])
                     lookup_by_id[resource['id']]['package id'] = r_list[0]['package_id']
                     lookup_by_id[resource['id']]['package name'] = p['title']
@@ -336,9 +335,6 @@ def get_IDs():
                     lookup_by_id[resource['id']]['name'] = resource['name']
 #                else:
 #                    lookup_by_id[resource['id']]['name'] = 'Unnamed resource'
-
-                #else:
-                #    print k, "No resource id here"
 
     tracks = load_resource("https://data.wprdc.org","272071c7-353a-43f6-9007-96a944c8dab1",None)
     for r in tracks:
@@ -522,6 +518,10 @@ def main():
 #    results_dict = convert_results_into_dict(results,metrics_name)
 
     modify_datastore = True
+
+    if not modify_datastore:
+        print("NOT modifying the datastore.")
+
     server = "Live" #server = "Staging"
     if True:
         site_stats_file = 'site_stats_by_month.csv'
@@ -611,7 +611,7 @@ def main():
                 downloads_by_month = get_history_by_month(service, profile, metrics, r_id)
             if downloads_by_month is None:
                 print("Strike 3. ",)
-                raise Exception("Unable to get downloads_by_month data for "+r_id+" after trying twice")
+                raise Exception("Unable to get downloads_by_month data for resource ID {} after trying twice.".format(r_id))
             if 'rows' in downloads_by_month:
                 download_rows = downloads_by_month['rows']
                 download_rows = insert_zeros(download_rows,r_id,'201603')
@@ -625,7 +625,7 @@ def main():
 
                 all_rows += download_rows
             else:
-                print "No rows found in the response for the dataset with resource ID "+r_id
+                print("No rows found in the response for the dataset with resource ID {}.".format(r_id))
             time.sleep(1.0)
 
     # Create an update to the dataset-downloads dataset by just looking at this month and last month and upserting the results.

@@ -52,7 +52,7 @@ def fetch_and_store_metric(metric,metrics_name,target_resource_id,modify_datasto
             metric_by_month = get_history_by_month(service, profile, metrics, r_id, event)
         if metric_by_month is None:
             print("Strike 3. ")
-            raise Exception("Unable to get metric_by_month data for "+r_id+" after trying thrice.")
+            raise Exception("Unable to get metric_by_month data for resource ID {} after trying thrice.".format(r_id))
         if 'rows' in metric_by_month:
             metric_rows = metric_by_month['rows']
             # Unfortunately, Google Analytics does not provide the resource
@@ -85,7 +85,7 @@ def fetch_and_store_metric(metric,metrics_name,target_resource_id,modify_datasto
 
             all_rows += metric_rows
         else:
-            print "No rows found in the response for the dataset with resource ID "+r_id
+            print("No rows found in the response for the dataset with resource ID {}".format(r_id))
         time.sleep(1.0)
 
 # Create an update to the dataset-downloads dataset by just looking at this month and last month and upserting the results.

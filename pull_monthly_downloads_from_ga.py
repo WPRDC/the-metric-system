@@ -57,7 +57,7 @@ def main():
             downloads_by_month = get_history_by_month(service, profile, metrics, r_id, True)
         if downloads_by_month is None:
             print("Strike 3. ")
-            raise Exception("Unable to get downloads_by_month data for "+r_id+" after trying twice")
+            raise Exception("Unable to get downloads_by_month data for resource ID {} after trying twice.".format(r_id))
         if 'rows' in downloads_by_month:
             download_rows = downloads_by_month['rows']
             download_rows = insert_zeros(download_rows,
@@ -72,7 +72,7 @@ def main():
 
             all_rows += download_rows
         else:
-            print "No rows found in the response for the dataset with resource ID "+r_id
+            print("No rows found in the response for the dataset with resource ID {}.".format(r_id))
         time.sleep(1.0)
 
 # Create an update to the dataset-downloads dataset by just looking at this month and last month and upserting the results.
