@@ -475,7 +475,8 @@ def set_resource_parameters_to_values(site,resource_id,parameters,new_values,API
     return success
 
 def update_resource_timestamp(resource_id,field):
-    return set_resource_parameters_to_values(site,resource_id,[field],[datetime.now().isoformat()],API_key)
+    return set_resource_parameters_to_values(site,resource_id,[field],[datetime.utcnow().isoformat()],API_key)
+
 
 def push_dataset_to_ckan(stats_rows, metrics_name, server, resource_id, field_mapper, keys, fields_to_add=[]):
     with open('ckan_settings.json') as f:
