@@ -353,24 +353,23 @@ def get_IDs():
 #                else:
 #                    lookup_by_id[resource['id']]['name'] = 'Unnamed resource'
 
-
-    tracks = load_resource(site,tracking_resource_id,None)
-    for r in tracks:
-        r_id = r['resource_id']
-        if r_id not in resources:
-            if 'name' in resource:
-                lookup_by_id[resource['id']]['name'] = resource['name']
-                print("Adding resource ID {} ({})".format(r_id,r['resource_name']))
-            else:
-                print("Adding resource ID {} (Unnamed resource)".format(r_id))
-            resources.append(r_id)
-            if r['package_id'] not in packages:
-                packages.append(r['package_id'])
-            lookup_by_id[r_id]['package_id'] = r['package_id']
-            lookup_by_id[r_id]['package name'] = r['package_name']
-            lookup_by_id[r_id]['publisher'] = r['organization']
-            lookup_by_id[r_id]['groups'] = stringify_groups(p)
-
+    if tracking_resource_id is not None:
+        tracks = load_resource(site,tracking_resource_id,None)
+        for r in tracks:
+            r_id = r['resource_id']
+            if r_id not in resources:
+                if 'name' in resource:
+                    lookup_by_id[resource['id']]['name'] = resource['name']
+                    print("Adding resource ID {} ({})".format(r_id,r['resource_name']))
+                else:
+                    print("Adding resource ID {} (Unnamed resource)".format(r_id))
+                resources.append(r_id)
+                if r['package_id'] not in packages:
+                    packages.append(r['package_id'])
+                lookup_by_id[r_id]['package_id'] = r['package_id']
+                lookup_by_id[r_id]['package name'] = r['package_name']
+                lookup_by_id[r_id]['publisher'] = r['organization']
+                lookup_by_id[r_id]['groups'] = stringify_groups(p)
 
 
     return resources, packages, lookup_by_id
