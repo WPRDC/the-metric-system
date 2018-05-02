@@ -5,7 +5,7 @@ import argparse
 from apiclient.discovery import build
 from oauth2client.service_account import ServiceAccountCredentials
 from credentials_file import SERVICE_ACCOUNT_E_MAIL, profile, API_key # to set the SERVICE_ACCOUNT_E_MAIL constant, GA profile ID, and API key (temporarily)
-from credentials_file import site, tracking_resource_id, site_stats_resource_id, monthly_downloads_resource_id
+from credentials_file import site, server, tracking_resource_id, site_stats_resource_id, monthly_downloads_resource_id
 import httplib2
 from oauth2client import client
 from oauth2client import file
@@ -548,7 +548,6 @@ def main():
     if not modify_datastore:
         print("NOT modifying the datastore.")
 
-    server = "Live" #server = "Staging"
     if True:
         site_stats_file = 'site_stats_by_month.csv'
         stats_by_month = get_history_by_month(service, profile, metrics)
