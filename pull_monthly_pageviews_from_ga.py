@@ -1,7 +1,4 @@
-import time
-from collections import defaultdict, OrderedDict
-import pprint
-from datapusher import Datapusher
+from collections import OrderedDict
 from pull_monthly_metric_from_ga import fetch_and_store_metric
 
 import sys # These two lines are here to prevent a weird problem wherein
