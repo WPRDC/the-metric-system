@@ -488,7 +488,7 @@ def push_dataset_to_ckan(stats_rows, metrics_name, server, resource_id, field_ma
         reordered_fields.append({"id": f, "type": field_mapper[f]})
     for heading in metrics_name.values():
         reordered_fields.append({"id": heading, "type": field_mapper[heading]})
-    dp.delete_datastore(resource_id)
+    print("delete_datastore status code = {}".format(dp.delete_datastore(resource_id)))
     print(dp.create_datastore(resource_id, reordered_fields, keys))
     ### TERMINATE Code for initializing the datastore from scratch ###
     fields_list = [d["id"] for d in reordered_fields]
@@ -496,6 +496,10 @@ def push_dataset_to_ckan(stats_rows, metrics_name, server, resource_id, field_ma
     if len(results_dicts) > 0:
         pprint.pprint(results_dicts[-1])
     success = upsert_data(dp,resource_id,results_dicts)
+    if success:
+        print("Successfully upserted data to resource ID {}.".format(resource_id))
+    else:
+        print("Failed to upsert data to resource ID {}.".format(resource_id))
     if success:
         success2 = update_resource_timestamp(resource_id,'last_modified')
         return success2
