@@ -684,3 +684,16 @@ def main():
 
 if __name__ == '__main__':
     main()
+
+# Define this here. It's used by other scripts but not by this script.
+field_mapper = defaultdict(lambda: "int")
+field_mapper['Year+month'] = "text"
+field_mapper['Package'] = "text"
+field_mapper['Resource'] = "text"
+field_mapper['Publisher'] = "text"
+field_mapper['Groups'] = "text"
+field_mapper['Package ID'] = "text"
+field_mapper['Resource ID'] = "text"
+field_mapper['Users'] = "int"
+field_mapper['Pageviews'] = "int"
+field_mapper['Sessions'] = "int"
