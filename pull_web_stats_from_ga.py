@@ -17,7 +17,7 @@ import pprint
 import requests
 import json
 import time
-from datapusher import Datapusher
+from datanudger import Datanudger
 
 import ckanapi
 import traceback
@@ -261,8 +261,8 @@ def stats_to_dict(stats,columns):
         tuples.append((col_name, stats[k]))
     return OrderedDict(tuples)
 
-def upsert_data(dp,resource_id,data):
-    # Upsert data to the CKAN datastore (as configured in dp) and the
+def upsert_data(dn,resource_id,data):
+    # Upsert data to the CKAN datastore (as configured in dn) and the
     # given resource ID.
 
     # The format of the data variable is a list of dicts, where each
@@ -271,19 +271,15 @@ def upsert_data(dp,resource_id,data):
 
     # The types of the columns are defined when the datastore is
     # created/recreated, in a command like this:
-    # dp.create_datastore(resource_id, reordered_fields, keys)
+    # dn.create_datastore(resource_id, reordered_fields, keys)
 
     # which returns a result like this:
     # {u'fields': [{u'type': u'text', u'id': u'Year+month'}, {u'type': u'text', u'id': u'Package'}, {u'type': u'text', u'id': u'Resource'}, {u'type': u'text', u'id': u'Publisher'}, {u'type': u'text', u'id': u'Groups'}, {u'type': u'text', u'id': u'Package ID'}, {u'type': u'text', u'id': u'Resource ID'}, {u'type': u'int', u'id': u'Pageviews'}], u'method': u'insert', u'primary_key': [u'Year+month', u'Resource ID'], u'resource_id': u'3d6b60f4-f25a-4e93-94d9-730eed61f69c'}
-    #fields_list =
-    #OrderedDict([('Year+month', u'201612'), ('Package', u'Allegheny County Air Quality'), ('Resource', u'Hourly Air Quality Data'), ('Publisher', u'Allegheny County'), ('Groups', u'Environment'), ('Package ID', u'c7b3266c-adc6-41c0-b19a-8d4353bfcdaf'), ('Resource ID', u'15d7dbf6-cb3b-407b-ae01-325352deed5c'), ('Pageviews', u'0')])
-    r = dp.upsert(resource_id, data, method='upsert')
-    if r.status_code != 200:
-        print(r.text)
-    else:
-        print("Data successfully stored.")
-    print("Status code: {}".format(r.status_code))
-    return r.status_code == 200
+    r = dn.upsert(resource_id, data, method='upsert')
+    #if r.status_code != 200: # Commenting this stuff out as datanudger does 
+    #not return status codes: It just throws exceptions when things go awry.
+    print("Data successfully stored.")
+    return True
 
 def query_resource(site,query,API_key=None):
     # Use the datastore_search_sql API endpoint to query a CKAN resource.
@@ -480,7 +476,7 @@ def update_resource_timestamp(resource_id,field):
 def push_dataset_to_ckan(stats_rows, metrics_name, server, resource_id, field_mapper, keys, fields_to_add=[]):
     with open('ckan_settings.json') as f:
         settings = json.load(f)
-    dp = Datapusher(settings, server=server)
+    dn = Datanudger(settings, server=server, etl_settings_file = None)
 
     ### COMMENCE Code for initializing the datastore from scratch ###
     reordered_fields = []
@@ -488,14 +484,15 @@ def push_dataset_to_ckan(stats_rows, metrics_name, server, resource_id, field_ma
         reordered_fields.append({"id": f, "type": field_mapper[f]})
     for heading in metrics_name.values():
         reordered_fields.append({"id": heading, "type": field_mapper[heading]})
-    print("delete_datastore status code = {}".format(dp.delete_datastore(resource_id)))
-    print(dp.create_datastore(resource_id, reordered_fields, keys))
+    print("delete_datastore return value = {}".format(dn.delete_datastore(resource_id)))
+    response = dn.create_datastore(resource_id, reordered_fields, keys)
+    pprint.pprint(response)
     ### TERMINATE Code for initializing the datastore from scratch ###
     fields_list = [d["id"] for d in reordered_fields]
     results_dicts = [stats_to_dict(r,fields_list) for r in stats_rows]
     if len(results_dicts) > 0:
         pprint.pprint(results_dicts[-1])
-    success = upsert_data(dp,resource_id,results_dicts)
+    success = upsert_data(dn,resource_id,results_dicts)
     if success:
         print("Successfully upserted data to resource ID {}.".format(resource_id))
     else:
@@ -508,15 +505,15 @@ def push_dataset_to_ckan(stats_rows, metrics_name, server, resource_id, field_ma
 def push_df_to_ckan(df, server, resource_id, field_mapper, all_fields, keys):
     with open('ckan_settings.json') as f:
         settings = json.load(f)
-    dp = Datapusher(settings, server=server)
+    dn = Datanudger(settings, server=server)
 
     ### COMMENCE Code for initializing the datastore from scratch ###
     ordered_fields = []
     for f in all_fields:
         ordered_fields.append({"id": f, "type": field_mapper[f]})
 
-    dp.delete_datastore(resource_id)
-    print(dp.create_datastore(resource_id, ordered_fields, keys))
+    print("delete_datastore return value = {}".format(dn.delete_datastore(resource_id)))
+    print(dn.create_datastore(resource_id, ordered_fields, keys))
     ### TERMINATE Code for initializing the datastore from scratch ###
     fields_list = [d["id"] for d in ordered_fields]
     list_of_dicts = df.to_dict(orient='records')
@@ -524,7 +521,7 @@ def push_df_to_ckan(df, server, resource_id, field_mapper, all_fields, keys):
     for d in list_of_dicts:
         results_dicts.append(OrderedDict((f,d[f]) for f in all_fields))
     pprint.pprint(results_dicts[-1])
-    success = upsert_data(dp,resource_id,results_dicts)
+    success = upsert_data(dn,resource_id,results_dicts)
     if success:
         success2 = update_resource_timestamp(resource_id,'last_modified')
         return success2
