@@ -545,38 +545,37 @@ def main():
     if not modify_datastore:
         print("NOT modifying the datastore.")
 
-    if True:
-        site_stats_file = 'site_stats_by_month.csv'
+    site_stats_file = 'site_stats_by_month.csv'
+    stats_by_month = get_history_by_month(service, profile, metrics)
+    if stats_by_month is None:
         stats_by_month = get_history_by_month(service, profile, metrics)
-        if stats_by_month is None:
-            stats_by_month = get_history_by_month(service, profile, metrics)
-        if stats_by_month is None:
-            raise Exception("Unable to get stats_by_month data after trying twice")
-        stats_rows = stats_by_month['rows']
-        pprint.pprint(stats_by_month['rows'])
+    if stats_by_month is None:
+        raise Exception("Unable to get stats_by_month data after trying twice")
+    stats_rows = stats_by_month['rows']
+    pprint.pprint(stats_by_month['rows'])
 
-        #Write the field names as the first line of the file:
-        fcsv = open(site_stats_file,'w')
-        csv_row = ','.join(['Year+month'] + metrics_name.values())
+    #Write the field names as the first line of the file:
+    fcsv = open(site_stats_file,'w')
+    csv_row = ','.join(['Year+month'] + metrics_name.values())
+    fcsv.write(csv_row+'\n')
+
+    for row in stats_rows:
+        csv_row = ','.join(row)
+        fcsv = open(site_stats_file,'a')
         fcsv.write(csv_row+'\n')
-
-        for row in stats_rows:
-            csv_row = ','.join(row)
-            fcsv = open(site_stats_file,'a')
-            fcsv.write(csv_row+'\n')
-            fcsv.close()
-        time.sleep(0.5)
+        fcsv.close()
+    time.sleep(0.5)
 
 
-        if modify_datastore:
-            field_mapper = defaultdict(lambda: "float")
-            field_mapper['Year+month'] = "text"
-            field_mapper['Users'] = "int"
-            field_mapper['Pageviews'] = "int"
-            field_mapper['Sessions'] = "int"
+    if modify_datastore:
+        field_mapper = defaultdict(lambda: "float")
+        field_mapper['Year+month'] = "text"
+        field_mapper['Users'] = "int"
+        field_mapper['Pageviews'] = "int"
+        field_mapper['Sessions'] = "int"
 
-            keys = 'Year+month'
-            push_dataset_to_ckan(stats_rows, metrics_name, server, site_stats_resource_id, field_mapper, keys, [keys])
+        keys = 'Year+month'
+        push_dataset_to_ckan(stats_rows, metrics_name, server, site_stats_resource_id, field_mapper, keys, [keys])
 
 #########################################################################
     # [ ] Write a function to get dataset metrics.

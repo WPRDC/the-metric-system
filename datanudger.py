@@ -11,7 +11,7 @@ from pprint import pprint
 # duplicate what Dataupusher operations were already being used.
 
 class Datanudger:
-    """Connection to ckan datastore"""
+    """Connection to the CKAN datastore"""
 
     def __init__(self, global_settings, server="Staging", etl_settings_file=None):
         if global_settings is not None:
