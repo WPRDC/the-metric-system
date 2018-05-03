@@ -1,7 +1,6 @@
 import time
-from collections import defaultdict, OrderedDict
+from collections import OrderedDict
 import pprint
-from datapusher import Datapusher
 from pull_web_stats_from_ga import initialize_ga_api, get_IDs, get_history_by_month, insert_zeros, push_dataset_to_ckan, field_mapper
 
 import sys # These two lines are here to prevent a weird problem wherein

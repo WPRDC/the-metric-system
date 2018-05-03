@@ -7,9 +7,8 @@
 # The newer version of this script is pull_monthly_dls_from_ga.py, and
 # it inserts all the other human-readable stuff many redundant times.
 import time
-from collections import defaultdict, OrderedDict
+from collections import OrderedDict
 import pprint
-from datapusher import Datapusher
 from pull_web_stats_from_ga import initialize_ga_api, get_IDs, get_history_by_month, insert_zeros, push_dataset_to_ckan, field_mapper
 
 

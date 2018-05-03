@@ -1,7 +1,4 @@
-import time
-from collections import defaultdict, OrderedDict
-import pprint
-from datapusher import Datapusher
+from collections import OrderedDict
 from pull_monthly_metric_from_ga import fetch_and_store_metric
 from pull_web_stats_from_ga import group_by_1_sum_2_ax_3, field_mapper, push_df_to_ckan
 
