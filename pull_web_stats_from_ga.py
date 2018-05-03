@@ -327,9 +327,10 @@ def get_IDs():
     # resources that existed but have been deleted (or turned private again). To
     # track the statistics of these as well. We are now merging in historical 
     # resource IDs produced by dataset-tracker.
+    ckan_max_results = 9999999
     resources, packages, = [], []
     lookup_by_id = defaultdict(lambda: defaultdict(str))
-    url = "{}/api/3/action/current_package_list_with_resources?limit=99999".format(site)
+    url = "{}/api/3/action/current_package_list_with_resources?limit={}".format(site,ckan_max_results)
     r = requests.get(url)
     # Traverse package list to get resource IDs.
     package_list = r.json()['result']
