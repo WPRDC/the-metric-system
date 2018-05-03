@@ -475,9 +475,8 @@ def update_resource_timestamp(resource_id,field):
 
 
 def push_dataset_to_ckan(stats_rows, metrics_name, server, resource_id, field_mapper, keys, fields_to_add=[]):
-    with open('ckan_settings.json') as f:
-        settings = json.load(f)
-    dn = Datanudger(settings, server=server, etl_settings_file = None)
+    etl_settings_file = 'parameters/datanudger-settings.json'
+    dn = Datanudger(None, server=server, etl_settings_file = etl_settings_file)
 
     ### COMMENCE Code for initializing the datastore from scratch ###
     reordered_fields = []
@@ -505,9 +504,8 @@ def push_dataset_to_ckan(stats_rows, metrics_name, server, resource_id, field_ma
     return success
 
 def push_df_to_ckan(df, server, resource_id, field_mapper, all_fields, keys):
-    with open('ckan_settings.json') as f:
-        settings = json.load(f)
-    dn = Datanudger(settings, server=server)
+    etl_settings_file = 'parameters/datanudger-settings.json'
+    dn = Datanudger(None, server=server, etl_settings_file = etl_settings_file)
 
     ### COMMENCE Code for initializing the datastore from scratch ###
     ordered_fields = []
