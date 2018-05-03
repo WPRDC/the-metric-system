@@ -20,7 +20,7 @@ def fetch_and_store_metric(metric,metrics_name,target_resource_id,modify_datasto
     # the resource IDs of the data files about which metrics are being
     # obtained).
     service = initialize_ga_api()
-    from credentials_file import profile # The Google Analytics profile ID for data.wrpdc.org.
+    from credentials_file import profile # The Google Analytics profile ID for data.wprdc.org.
 
     metrics = ', '.join(metrics_name.keys())
     resources, packages, lookup_by_id = get_IDs()

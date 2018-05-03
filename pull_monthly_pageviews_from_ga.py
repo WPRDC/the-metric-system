@@ -15,7 +15,7 @@ sys.excepthook = sys.__excepthook__ # a) the script would get stuck after
     # One issue is that there are a lot more resources that come up with non-zero pageviews than resources that come up with non-zero downloads (like 799 vs. like maybe 400-450).
 
 def main():
-    from credentials_file import profile # The GA profile ID for data.wrpdc.org.
+    from credentials_file import profile # The GA profile ID for data.wprdc.org.
     from credentials_file import monthly_pageviews_resource_id # The relevant CKAN resource.
     store = True
     metric = 'pageviews'

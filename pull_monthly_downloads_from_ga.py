@@ -24,7 +24,7 @@ sys.excepthook = sys.__excepthook__ # a) the script would get stuck after
     # For every resource_id in the data.json file, run downloads_by_month and upsert the results to the monthly-downloads datastore.
 
 def main():
-    from credentials_file import profile, monthly_downloads_resource_id # The profile ID for data.wrpdc.org.
+    from credentials_file import profile, monthly_downloads_resource_id # The profile ID for data.wprdc.org.
     service = initialize_ga_api()
 
     modify_datastore = True
