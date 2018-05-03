@@ -30,10 +30,10 @@ class Datanudger:
 
     def create_datastore(self, resource_id, fields, keys=None):
         """
-        Creates new datastore for specified resource
-        :param resource_id: resource ID for which new datastore is being made
-        :param fields: header fields for CSV file
-        :return: resource ID, if successful
+        Creates a new datastore for the specified resource.
+        :param resource_id: Resource ID for which new datastore is being made
+        :param fields: Header fields for CSV file.
+        :return: The newly created resource object.
         """
 
         ckan = ckanapi.RemoteCKAN(self.site, apikey=self.key)
@@ -56,20 +56,24 @@ class Datanudger:
 
     def delete_datastore(self, resource_id):
         """
-        Deletes datastore table for resource ID with value resource_id
-        :param resource: resource to remove table from
-        :return: request status
+        Deletes the datastore table for the resource with ID resource_id.
+        :param resource: Resource to remove table from.
+        :return: Wahtever ckanapi returns.
         """
+        # Note! When delete_datastore (or other operations) fail, 
+        # check whether the 'url_type' of the resource is set to 
+        # something other than 'datastore'. This can cause weird
+        # problems.
         ckan = ckanapi.RemoteCKAN(self.site, apikey=self.key)
         response = ckan.action.datastore_delete(id=resource_id, force=True)
         return response
 
     def upsert(self, resource_id, data, method='insert'):
         """
-        Upsert data into datastore
+        Upsert data into the datastore.
         :param resource_id: ID of the resource into which the data will be inserted/upserted/whatever.
-        :param data: data to be upserted
-        :return: request status
+        :param data: Data to be upserted.
+        :return: Whatever ckanapi returns.
         """
         ckan = ckanapi.RemoteCKAN(self.site, apikey=self.key)
         response = ckan.action.datastore_upsert(resource_id = resource_id, records = data, method = method, force = True)
