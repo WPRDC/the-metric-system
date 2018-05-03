@@ -489,6 +489,7 @@ def push_dataset_to_ckan(stats_rows, metrics_name, server, resource_id, field_ma
     response = dn.create_datastore(resource_id, reordered_fields, keys)
     pprint.pprint(response)
     ### TERMINATE Code for initializing the datastore from scratch ###
+
     fields_list = [d["id"] for d in reordered_fields]
     results_dicts = [stats_to_dict(r,fields_list) for r in stats_rows]
     if len(results_dicts) > 0:
@@ -607,78 +608,6 @@ def main():
 # to compensate on the front (pre-processing) or the back of the process (right
 # before plotting).
 
-
-####### Get monthly downloads data ####################################
-    # Create entire dataset-downloads dataset by looking at every month.
-    # For every resource_id in the data.json file, run downloads_by_month and upsert the results to the monthly-downloads datastore.
-
-    if False:
-        resources, packages = get_IDs()
-
-        #Write the field names as the first line of the file:
-        ddbm_file = 'dataset_downloads_by_month.csv'
-        fcsv = open(ddbm_file,'w')
-        csv_row = ','.join(['Year+month'] + metrics_name.values())
-        fcsv.write(csv_row+'\n')
-
-        all_rows = []
-        for k,r_id in enumerate(resources):
-            downloads_by_month = get_history_by_month(service, profile, metrics, r_id)
-            if downloads_by_month is None:
-                print("Strike 1. ",)
-                downloads_by_month = get_history_by_month(service, profile, metrics, r_id)
-            if downloads_by_month is None:
-                print("Strike 2. ",)
-                downloads_by_month = get_history_by_month(service, profile, metrics, r_id)
-            if downloads_by_month is None:
-                print("Strike 3. ",)
-                raise Exception("Unable to get downloads_by_month data for resource ID {} after trying twice.".format(r_id))
-            if 'rows' in downloads_by_month:
-                download_rows = downloads_by_month['rows']
-                download_rows = insert_zeros(download_rows,r_id,'201603')
-
-                pprint.pprint(download_rows)
-                for row in download_rows:
-                    csv_row = ','.join(row)
-                    fcsv = open(ddbm_file,'a')
-                    fcsv.write(csv_row+'\n')
-                    fcsv.close()
-
-                all_rows += download_rows
-            else:
-                print("No rows found in the response for the dataset with resource ID {}.".format(r_id))
-            time.sleep(1.0)
-
-    # Create an update to the dataset-downloads dataset by just looking at this month and last month and upserting the results.
-        if modify_datastore:
-            resource_id = monthly_downloads_resource_id
-
-            field_mapper = defaultdict(lambda: "int")
-            field_mapper['Year+month'] = "text"
-            field_mapper['Resource ID'] = "text"
-
-            keys = ['Year+month', 'Resource ID']
-            push_dataset_to_ckan(all_rows, metrics_name, server, resource_id, field_mapper, keys, keys) #This pushes everything in download_rows
-        # [ ] Modify push_dataset_to_ckan to only initialize the datastore when necessary.
-            # This script could have two modes:
-            #   1) Download all data and overwrite the old stuff.
-            #   2) Download only this month and last month and upsert into
-            #   the existing repository.
-
-
-
-#    get_full_history(resource_id="40776043-ad00-40f5-9dc8-1fde865ff571")
-    # Pull down daily downloads/unique downloads/pageviews and then monthly
-    # stats, and then use the data.json file to filter down to the things
-    # we want to track (maybe).
-
-    # If we dump the output
-    # u'rows': [[u'40776043-ad00-40f5-9dc8-1fde865ff571', u'668', u'260'],
-    #       [u'7a417847-37bb-4a16-a25e-477f2a71661d', u'493', u'82'],
-    #       [u'c0fcc09a-7ddc-4f79-a4c1-9542301ef9dd', u'139', u'78'],
-    #
-    # and prepend some kind of date information, that could essentially be the
-    # stuff inserted into the dataset (once the types have been properly taken care of)
 
 if __name__ == '__main__':
     main()
