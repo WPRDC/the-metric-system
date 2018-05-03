@@ -58,7 +58,7 @@ class Datanudger:
         """
         Deletes the datastore table for the resource with ID resource_id.
         :param resource: Resource to remove table from.
-        :return: Wahtever ckanapi returns.
+        :return: Whatever ckanapi returns.
         """
         # Note! When delete_datastore (or other operations) fail, 
         # check whether the 'url_type' of the resource is set to 
