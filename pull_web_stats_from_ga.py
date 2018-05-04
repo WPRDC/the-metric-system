@@ -116,7 +116,7 @@ def get_results(service, profile_id):
       #filters='ga:medium==organic',
       metrics='ga:sessions').execute()
 
-def get_metrics(service, profile_id, metrics, start_date='30daysAgo',end_date='today', dimensions='',sort_by='',filters=''):
+def get_metrics(service, profile_id, metrics, start_date='30daysAgo',end_date='today', dimensions='',sort_by='',filters='',max_results=10000,start_index=1):
   # Use the Analytics Service Object to query the Core Reporting API
   # for the specified metrics over the given date range.
   if sort_by == '':
@@ -125,7 +125,9 @@ def get_metrics(service, profile_id, metrics, start_date='30daysAgo',end_date='t
           start_date=start_date,
           end_date=end_date,
           dimensions=dimensions,
-          metrics=metrics).execute()
+          metrics=metrics,
+          max_results=max_results,
+          start_index=start_index).execute()
   else:
       return service.data().ga().get(
           ids='ga:' + profile_id,
@@ -136,7 +138,9 @@ def get_metrics(service, profile_id, metrics, start_date='30daysAgo',end_date='t
           #dimensions="ga:eventCategory,ga:eventLabel"
           #sort=sort_by"-ga:totalEvents",
           filters=filters,
-          metrics=metrics).execute()
+          metrics=metrics,
+          max_results=max_results,
+          start_index=start_index).execute()
 
 def metrics_for_last_month(service, profile, metrics):
     today = date.today()
