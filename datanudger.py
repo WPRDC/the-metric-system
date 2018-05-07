@@ -65,7 +65,20 @@ class Datanudger:
         # something other than 'datastore'. This can cause weird
         # problems.
         ckan = ckanapi.RemoteCKAN(self.site, apikey=self.key)
-        response = ckan.action.datastore_delete(id=resource_id, force=True)
+        try:
+            response = ckan.action.datastore_delete(id=resource_id, force=True)
+        except ckanapi.errors.NotFound:
+            # If the datastore can't be found, an exception is thrown,
+            # though not a very informative one.
+
+            # Let's check if the resource itself exists.
+            try:
+                metadata = ckan.action.resource_show(id=resource_id)
+            except ckanapi.errors.NotFound:
+                raise ValueError("There is no resource on {} under resource ID {}.".format(self.site, resource_id))
+            print("This resource does not have a datatore to delete.")
+            response = "Non-existent datastore does not need to be deleted."
+
         return response
 
     def upsert(self, resource_id, data, method='insert'):
