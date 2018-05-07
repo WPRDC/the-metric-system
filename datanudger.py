@@ -28,10 +28,25 @@ class Datanudger:
                 self.site = settings["loader"][server]["ckan_root_url"]
                 self.package_id = settings["loader"][server]["package_id"]
 
+    def adjust_metadata(self, resource_id):
+        """
+        It's necessary to update the metadata of the resource after creating the datastore.
+        Otherwise the URL is wrong and data won't upsert.
+        :param resource: Resource ID for which the metadata will be modified.
+        :return: Whatever ckanapi returns.
+        """
+        ckan = ckanapi.RemoteCKAN(self.site, apikey=self.key)
+        dump_url = "{}/datastore/dump/{}".format(self.site,resource_id)
+        response = ckan.action.resource_patch(id=resource_id, 
+                url=dump_url, 
+                url_type='datanudger',
+                last_modified=datetime.datetime.utcnow().isoformat())
+        return response
+
     def create_datastore(self, resource_id, fields, keys=None):
         """
         Creates a new datastore for the specified resource.
-        :param resource_id: Resource ID for which new datastore is being made
+        :param resource_id: Resource ID for which new datastore is being made.
         :param fields: Header fields for CSV file.
         :return: The newly created resource object.
         """
@@ -51,6 +66,8 @@ class Datanudger:
         #     u'method': u'insert',
         #     u'primary_key': u'Year+month',
         #     u'resource_id': u'7a7f86c5-015c-4bf5-abcf-ad2332c38813'}
+
+        self.adjust_metadata(resource_id)
         print("Datastore created for resource ID {}.".format(resource_id))
         return response
 
