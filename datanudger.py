@@ -28,6 +28,28 @@ class Datanudger:
                 self.site = settings["loader"][server]["ckan_root_url"]
                 self.package_id = settings["loader"][server]["package_id"]
 
+    def regulate_tags(self, package_id):
+        # Format of 'tags' field in CKAN package parameters:
+        # [{u'vocabulary_id': None, u'state': u'active',
+        # u'display_name': u'cookie_monster', u'id':
+        # u'e0fb1b91-a69c-4924-8930-725d8dea281a', u'name': u'cookie_monster'},
+        # {u'vocabulary_id': None, u'state': u'active', u'display_name':
+        # u'etl', u'id': u'41c116d5-8df4-4da1-87bc-77cd7e8d57ff', u'name': u'etl'}]
+
+        # Get current tags:
+        ckan = ckanapi.RemoteCKAN(self.site, apikey=self.key)
+        metadata = ckan.action.package_show(id=package_id)
+        current_tags = metadata['tags']
+
+        # Adjust tags by getting rid of 'etl' and adding '_etl'.
+        new_tags = [t for t in current_tags if t['name'] != 'etl']
+        new_tags.append({'name': '_etl'})
+
+        payload = {}
+        payload['id'] = package_id
+        payload['tags'] = new_tags
+        results = ckan.action.package_patch(**payload)
+
     def adjust_metadata(self, resource_id):
         """
         It's necessary to update the metadata of the resource after creating the datastore.
@@ -37,10 +59,13 @@ class Datanudger:
         """
         ckan = ckanapi.RemoteCKAN(self.site, apikey=self.key)
         dump_url = "{}/datastore/dump/{}".format(self.site,resource_id)
-        response = ckan.action.resource_patch(id=resource_id, 
-                url=dump_url, 
+        response = ckan.action.resource_patch(id=resource_id,
+                url=dump_url,
                 url_type='datanudger',
                 last_modified=datetime.datetime.utcnow().isoformat())
+
+        package_id = ckan.action.resource_show(id=resource_id)['package_id']
+        self.regulate_tags(package_id)
         return response
 
     def create_datastore(self, resource_id, fields, keys=None):
